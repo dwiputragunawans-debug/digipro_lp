@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+/*
+    Gaya halaman LajuKasir.
+
+    Berkas ini terpisah dari resources/css/app.css milik landing page DigiPro
+    Solution supaya warnanya dan berkas yang dihasilkan tidak saling
+    memengaruhi. Yang dibagi hanyalah hurufnya (Instrument Sans dari Bunny,
+    sama seperti panel admin) dan komponen WhatsApp.
+
+    Warnanya diambil langsung dari logo LajuKasir, jadi halamannya terasa satu
+    keluarga dengan logonya:
+
+        hijau teal  #087b6a  huruf "Laju" dan tanda L pada logo
+        biru tua    #1b2a3b  huruf "Kasir" pada logo
+
+    Karena itu ada dua tingkatan warna. brand-* adalah turunan teal dan dipakai
+    untuk tombol, ikon, label kecil dan semua latar muda; ink-* adalah turunan
+    biru tua dan dipakai untuk judul, bagian bergradasi gelap serta kaki
+    halaman. Gradasi gelap halamannya menyeberang dari ink ke brand, persis
+    seperti dua warna pada logonya.
+*/
+
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Hijau teal logo: brand-600 adalah warna aslinya, sisanya turunannya. */
+    --color-brand-50: #f0faf8;
+    --color-brand-100: #d8f2ee;
+    --color-brand-200: #b0e5de;
+    --color-brand-300: #7fd0c7;
+    --color-brand-400: #43b3a8;
+    --color-brand-500: #159889;
+    --color-brand-600: #087b6a;
+    --color-brand-700: #076457;
+    --color-brand-800: #075046;
+    --color-brand-900: #063f38;
+    --color-brand-950: #032623;
+
+    /* Biru tua logo: ink-900 adalah warna aslinya, sisanya turunannya. */
+    --color-ink-50: #f4f6f9;
+    --color-ink-100: #e7ebf1;
+    --color-ink-200: #ccd5e0;
+    --color-ink-300: #a3b1c4;
+    --color-ink-400: #7387a0;
+    --color-ink-500: #526781;
+    --color-ink-600: #3e5168;
+    --color-ink-700: #303f53;
+    --color-ink-800: #263343;
+    --color-ink-900: #1b2a3b;
+    --color-ink-950: #111c28;
+}

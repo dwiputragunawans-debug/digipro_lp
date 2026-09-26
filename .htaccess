@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Penjaga berkas proyek.
+#
+# Berkas ini hanya berpengaruh kalau document root hosting menunjuk ke folder
+# ini, bukan ke folder public/. Dalam keadaan itu isi .env, database/, storage/
+# dan vendor/ bisa diunduh siapa saja, dan daftar isi foldernya bisa dibaca.
+#
+# Dua hal yang dilakukan di sini:
+#   1. Setiap permintaan dilayani dari folder public/, persis seperti document
+#      root yang benar, sehingga berkas sensitif di luar public/ tidak pernah
+#      tersentuh. Ini juga membuat situsnya tetap jalan walau document root
+#      salah setel.
+#   2. Daftar isi folder dimatikan, supaya isi folder tidak bisa dibaca.
+#
+# Kalau document root-nya sudah benar (…/public), berkas ini tidak pernah
+# dibaca dan tidak berpengaruh sama sekali.
+#
+# Catatan: folder .well-known dibiarkan terbuka supaya perpanjangan sertifikat
+# SSL (Let's Encrypt http-01) tetap berjalan.
+# ---------------------------------------------------------------------------
+
+<IfModule mod_negotiation.c>
+    Options -MultiViews -Indexes
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Seluruh permintaan dilayani dari public/.
+    RewriteCond %{REQUEST_URI} !/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+
+    # Jaring kedua: berkas yang paling sering bocor tetap ditutup, termasuk
+    # kalau namanya unik di dalam folder public/.
+    RewriteRule ^(\.env.*|\.git.*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|\.phpunit\.result\.cache|vite\.config\.js|README\.md|SECURITY\.md)$ - [F,L,NC]
+</IfModule>
+
+<IfModule mod_autoindex.c>
+    IndexIgnore *
+</IfModule>
