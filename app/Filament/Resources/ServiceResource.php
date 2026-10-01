@@ -59,7 +59,7 @@ class ServiceResource extends Resource
                 Forms\Components\TextInput::make('cta_url')
                     ->label('Tautan tombol')
                     ->placeholder('#')
-                    ->helperText('Alamat tujuan tombol, misalnya https://wa.me/6281234567890. Tautan WhatsApp boleh dikosongkan: tombolnya lalu otomatis menuju WhatsApp dengan pesan di bawah.'),
+                    ->helperText('Alamat tujuan tombol, misalnya https://wa.me/6281234567890. Tautan WhatsApp boleh dikosongkan: tombolnya lalu otomatis menuju WhatsApp dengan pesan di bawah. Kalau diisi, nomornya tetap dipakai, tetapi tautannya ditulis ulang menjadi bentuk wa.me supaya pesan di bawah ikut terisi.'),
                 Forms\Components\Textarea::make('whatsapp_message')
                     ->label('Pesan WhatsApp untuk paket ini')
                     ->rows(3)

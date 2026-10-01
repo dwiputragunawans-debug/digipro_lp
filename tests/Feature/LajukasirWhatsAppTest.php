@@ -185,9 +185,11 @@ class LajukasirWhatsAppTest extends TestCase
         $html = $this->get($this->url())->assertOk()->getContent();
 
         // Pesan bawaan situs yang dipakai, jadi pengunjung tidak mendarat di
-        // kolom chat yang kosong.
-        $this->assertStringContainsString('text='.rawurlencode(Setting::DEFAULT_WHATSAPP_MESSAGE), $html);
-        $this->assertStringContainsString('https://api.whatsapp.com/send/?phone=6281234567890', $html);
+        // kolom chat yang kosong. Tautannya ditulis ulang menjadi wa.me —
+        // bentuk yang paling aman untuk aplikasi WhatsApp — sementara nomornya
+        // tetap nomor dari tautan admin.
+        $this->assertStringContainsString('https://wa.me/6281234567890?text='.rawurlencode(Setting::DEFAULT_WHATSAPP_MESSAGE), $html);
+        $this->assertStringNotContainsString('app_absent', $html);
     }
 
     public function test_a_whatsapp_link_that_already_has_a_message_is_left_alone(): void

@@ -34,17 +34,36 @@ trait HasWhatsApp
      */
     public function whatsappNumber(): string
     {
-        $digits = preg_replace('/\D+/', '', (string) $this->whatsapp_number) ?? '';
+        return $this->normalizeWhatsAppNumber($this->whatsapp_number) ?: static::DEFAULT_WHATSAPP_NUMBER;
+    }
 
-        if ($digits === '') {
-            return static::DEFAULT_WHATSAPP_NUMBER;
+    /**
+     * Nomor tujuan yang tersimpan di dalam sebuah tautan WhatsApp.
+     *
+     * Tautan wa.me menaruh nomornya di jalur (wa.me/62812...), sedangkan tautan
+     * "bagikan ke WhatsApp" menaruhnya di parameter phone. Keduanya dirapikan ke
+     * bentuk yang sama supaya bisa dipakai lagi di tautan yang baru.
+     *
+     * Null dikembalikan kalau tautannya bukan tautan WhatsApp, atau kalau di
+     * dalamnya memang tidak ada nomor yang bisa dibaca.
+     */
+    public function whatsappPhoneFromUrl(?string $url): ?string
+    {
+        if (! $this->isWhatsAppLink($url)) {
+            return null;
         }
 
-        return match (true) {
-            str_starts_with($digits, '0') => '62'.substr($digits, 1),
-            str_starts_with($digits, '8') => '62'.$digits,
-            default => $digits,
-        };
+        $query = [];
+
+        parse_str((string) parse_url((string) $url, PHP_URL_QUERY), $query);
+
+        $path = (string) parse_url((string) $url, PHP_URL_PATH);
+        $segment = explode('/', trim($path, '/'))[0] ?? '';
+
+        $phone = $this->normalizeWhatsAppNumber($segment)
+            ?: $this->normalizeWhatsAppNumber($query['phone'] ?? null);
+
+        return $phone ?: null;
     }
 
     /**
@@ -84,42 +103,45 @@ trait HasWhatsApp
     }
 
     /**
-     * Tautan WhatsApp yang sudah dibuat admin, tetapi pesannya diganti dengan
-     * pesan yang dikirim pemanggil.
+     * Tautan WhatsApp yang sudah dibuat admin, dengan pesan dari pemanggil.
      *
-     * Nomor tujuannya ikut tautan yang ada, jadi admin tetap yang menentukan
-     * mau dikirim ke nomor mana. Kalau tautannya ternyata bukan tautan
-     * WhatsApp, yang dipakai adalah nomor di pengaturan situs.
+     * Nomor tujuannya tetap diambil dari tautan admin, jadi admin masih yang
+     * menentukan obrolannya dikirim ke nomor mana. Bentuk tautannya sendiri
+     * selalu ditulis ulang menjadi wa.me yang bersih: parameter bawaan WhatsApp
+     * seperti "type=phone_number" dan "app_absent=0" — yang ikut tersalin saat
+     * admin memakai tombol "bagikan ke WhatsApp" — dibuang.
+     *
+     * Alasannya, kedua parameter itu menyuruh WhatsApp menyerahkan obrolannya ke
+     * aplikasi, dan di aplikasi pesan yang sudah terisi justru sering hilang.
+     * Pesan itu yang memberi tahu admin paket mana yang ditanyakan, jadi ia
+     * tidak boleh ikut hilang.
+     *
+     * Kalau tautannya ternyata bukan tautan WhatsApp, yang dipakai adalah nomor
+     * di pengaturan situs.
      */
     public function whatsappUrlWithText(?string $url, string $message): string
     {
-        if (! $this->isWhatsAppLink($url)) {
-            return $this->whatsappUrlFor($message);
+        $phone = $this->whatsappPhoneFromUrl($url);
+
+        if ($phone === null) {
+            // Tautan WhatsApp yang nomornya tidak terbaca — misalnya tautan
+            // pendek wa.me/message/... — dipakai apa adanya supaya obrolannya
+            // tidak berpindah ke nomor lain.
+            return $this->isWhatsAppLink($url)
+                ? $this->whatsappUrlWithReplacedText((string) $url, $message)
+                : $this->whatsappUrlFor($message);
         }
 
-        $parts = parse_url((string) $url);
-
-        if ($parts === false || ! filled($parts['host'] ?? null)) {
-            return $this->whatsappUrlFor($message);
-        }
-
-        // Hanya pesannya yang ditimpa; parameter lain dari tautan admin
-        // (nomor telepon, penanda aplikasi) dibiarkan apa adanya.
-        parse_str((string) ($parts['query'] ?? ''), $query);
-
-        $query['text'] = $message;
-
-        return ($parts['scheme'] ?? 'https').'://'.$parts['host'].($parts['path'] ?? '')
-            .'?'.http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        return 'https://wa.me/'.$phone.'?text='.rawurlencode($message);
     }
 
     /**
-     * Tautan WhatsApp yang pesannya sudah terisi.
+     * Tautan WhatsApp yang pesannya sudah terisi, dalam bentuk wa.me yang bersih.
      *
-     * Tautan yang dibuat admin dipakai apa adanya selama pesannya sudah diisi.
-     * Kalau kolom pesannya kosong — seperti tautan yang disalin dari tombol
-     * "bagikan ke WhatsApp" — pesan bawaan situs yang dipakai, supaya
-     * pengunjung tidak mulai dari kolom chat yang kosong.
+     * Pesan yang ditulis admin di tautannya sendiri dipertahankan. Kalau kolom
+     * pesannya masih kosong — seperti tautan yang disalin dari tombol "bagikan
+     * ke WhatsApp" — pesan bawaan situs yang dipakai, supaya pengunjung tidak
+     * mulai dari kolom chat yang kosong.
      *
      * Tautan yang bukan WhatsApp, dan tautan yang memang belum diisi,
      * dikembalikan tanpa perubahan.
@@ -134,11 +156,9 @@ trait HasWhatsApp
 
         parse_str((string) parse_url((string) $url, PHP_URL_QUERY), $query);
 
-        if (filled($query['text'] ?? null)) {
-            return (string) $url;
-        }
+        $text = $query['text'] ?? null;
 
-        return $this->whatsappUrlWithText($url, $this->whatsappMessage());
+        return $this->whatsappUrlWithText($url, filled($text) ? (string) $text : $this->whatsappMessage());
     }
 
     /**
@@ -154,6 +174,42 @@ trait HasWhatsApp
 
         return str_starts_with($url, 'https://wa.me/')
             || str_starts_with($url, 'http://wa.me/')
-            || str_starts_with($url, 'https://api.whatsapp.com/');
+            || str_starts_with($url, 'https://api.whatsapp.com/')
+            || str_starts_with($url, 'https://web.whatsapp.com/');
+    }
+
+    /**
+     * Nomor yang sudah dirapikan ke bentuk internasional tanpa tanda plus,
+     * misalnya 0896..., +62 896... dan 896... menjadi 62896....
+     *
+     * String kosong dikembalikan kalau tidak ada angka yang bisa dipakai.
+     */
+    private function normalizeWhatsAppNumber(?string $number): string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $number) ?? '';
+
+        return match (true) {
+            $digits === '' => '',
+            str_starts_with($digits, '0') => '62'.substr($digits, 1),
+            str_starts_with($digits, '8') => '62'.$digits,
+            default => $digits,
+        };
+    }
+
+    /**
+     * Satu tautan WhatsApp dengan pesan yang diganti, tanpa mengubah host atau
+     * jalurnya. Hanya dipakai kalau nomornya tidak terbaca dari tautan itu.
+     */
+    private function whatsappUrlWithReplacedText(string $url, string $message): string
+    {
+        $parts = parse_url($url) ?: [];
+        $query = [];
+
+        parse_str((string) ($parts['query'] ?? ''), $query);
+
+        $query['text'] = $message;
+
+        return ($parts['scheme'] ?? 'https').'://'.($parts['host'] ?? '').($parts['path'] ?? '')
+            .'?'.http_build_query($query, '', '&', PHP_QUERY_RFC3986);
     }
 }

@@ -85,12 +85,16 @@ class LandingServiceWhatsappTest extends TestCase
 
         $section = $this->solutionSection();
 
-        // Nomor dan parameter lain dari tautan admin tetap dipakai; hanya
-        // pesannya yang diisi. Tanda & tampil sebagai &amp; karena ditulis di
-        // dalam atribut href.
-        $this->assertStringContainsString('https://api.whatsapp.com/send/?phone=6289662135974&amp;text=', $section);
-        $this->assertStringContainsString('&amp;type=phone_number&amp;app_absent=0', $section);
-        $this->assertStringContainsString(rawurlencode('paket "Katalog & Toko Online"'), $section);
+        // Nomor dari tautan admin tetap dipakai, tetapi tautannya dibersihkan
+        // menjadi bentuk wa.me: parameter "type=phone_number" dan "app_absent=0"
+        // menyuruh WhatsApp menyerahkan obrolannya ke aplikasi, dan di aplikasi
+        // pesan yang sudah terisi sering ikut hilang.
+        $this->assertStringContainsString(
+            'https://wa.me/6289662135974?text='.rawurlencode('Halo DigiPro Solution, saya ingin bertanya tentang paket "Katalog & Toko Online". Apakah bisa dijelaskan lebih lanjut?'),
+            $section,
+        );
+        $this->assertStringNotContainsString('api.whatsapp.com', $section);
+        $this->assertStringNotContainsString('app_absent', $section);
     }
 
     public function test_a_link_that_is_not_whatsapp_is_left_alone(): void
@@ -105,6 +109,25 @@ class LandingServiceWhatsappTest extends TestCase
         $this->assertStringContainsString('https://example.test/kontak', $section);
         $this->assertStringNotContainsString('wa.me', $section);
         $this->assertStringNotContainsString('data-whatsapp-click', $section);
+    }
+
+    public function test_the_placeholder_link_is_treated_as_an_empty_field(): void
+    {
+        // "#" adalah tulisan contoh di kolom tautan panel admin. Tombol yang
+        // menunjuk ke sana hanya melompat ke atas halaman, jadi kartunya
+        // diarahkan ke WhatsApp seperti kalau kolomnya dikosongkan.
+        $this->service([
+            'title' => 'Website Profil',
+            'cta_url' => '#',
+        ]);
+
+        $section = $this->solutionSection();
+
+        $this->assertStringContainsString(
+            'https://wa.me/'.SiteSetting::DEFAULT_WHATSAPP_NUMBER.'?text='.rawurlencode(str_replace('{paket}', 'Website Profil', Service::DEFAULT_WHATSAPP_MESSAGE_TEMPLATE)),
+            $section,
+        );
+        $this->assertStringContainsString('data-whatsapp-click target="_blank" rel="noopener"', $section);
     }
 
     public function test_the_message_falls_back_to_the_default_template(): void

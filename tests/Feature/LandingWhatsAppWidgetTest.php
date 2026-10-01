@@ -113,13 +113,17 @@ class LandingWhatsAppWidgetTest extends TestCase
 
         $html = $this->get('/')->assertOk()->getContent();
 
+        // Nomornya tetap dari tautan admin, tetapi tautannya ditulis ulang
+        // menjadi bentuk wa.me supaya pesannya ikut terisi, juga saat WhatsApp
+        // membuka aplikasinya.
         $this->assertStringContainsString(
-            'https://api.whatsapp.com/send/?phone=6289662135974&amp;text='.rawurlencode(SiteSetting::DEFAULT_WHATSAPP_MESSAGE).'&amp;type=phone_number&amp;app_absent=0',
+            'https://wa.me/6289662135974?text='.rawurlencode(SiteSetting::DEFAULT_WHATSAPP_MESSAGE),
             $html,
         );
+        $this->assertStringNotContainsString('app_absent', $html);
     }
 
-    public function test_a_whatsapp_link_that_already_has_a_message_is_left_alone(): void
+    public function test_a_whatsapp_link_that_already_has_a_message_keeps_that_message(): void
     {
         $url = 'https://wa.me/628111222333?text='.rawurlencode('Halo, saya mau tanya harga paket.');
 
@@ -131,6 +135,22 @@ class LandingWhatsAppWidgetTest extends TestCase
         $html = $this->get('/')->assertOk()->getContent();
 
         $this->assertStringContainsString($url, $html);
+    }
+
+    public function test_a_whatsapp_share_link_that_already_has_a_message_is_tidied_up(): void
+    {
+        // Tautan "bagikan ke WhatsApp" yang pesannya sudah diisi admin: pesannya
+        // dipertahankan, tetapi bentuknya dibersihkan supaya aplikasi WhatsApp
+        // tidak melewatinya.
+        Hero::create([
+            'title' => 'Judul banner',
+            'cta_primary_url' => 'https://api.whatsapp.com/send/?phone=6281234567890&text=Halo%20kak&type=phone_number&app_absent=0',
+        ]);
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringContainsString('https://wa.me/6281234567890?text=Halo%20kak', $html);
+        $this->assertStringNotContainsString('api.whatsapp.com', $html);
     }
 
     public function test_a_hero_link_that_is_not_whatsapp_is_left_alone(): void
@@ -153,6 +173,36 @@ class LandingWhatsAppWidgetTest extends TestCase
         // Class "flex" baru dipasang oleh JavaScript saat halaman sudah digulir,
         // jadi tombolnya diam di tempat selama belum dibutuhkan.
         $this->assertStringContainsString('Kembali ke atas halaman', $html);
+    }
+
+    public function test_the_number_inside_a_whatsapp_link_is_read_back_and_tidied_up(): void
+    {
+        $setting = new SiteSetting(['whatsapp_number' => '0812-0000-1111']);
+
+        // Tautan wa.me menyimpan nomornya di jalur, tautan "bagikan ke
+        // WhatsApp" di parameter phone. Keduanya harus terbaca.
+        $this->assertSame('628111222333', $setting->whatsappPhoneFromUrl('https://wa.me/628111222333'));
+        $this->assertSame('628111222333', $setting->whatsappPhoneFromUrl('https://web.whatsapp.com/send?phone=08111222333'));
+        $this->assertSame('6281234567890', $setting->whatsappPhoneFromUrl('https://api.whatsapp.com/send/?phone=6281234567890&text&type=phone_number&app_absent=0'));
+
+        // Tautan yang bukan WhatsApp, tautan wa.me tanpa nomor, dan nomor yang
+        // tidak masuk akal tidak menghasilkan nomor apa pun.
+        $this->assertNull($setting->whatsappPhoneFromUrl('https://example.test/kontak'));
+        $this->assertNull($setting->whatsappPhoneFromUrl('https://wa.me/message/ABCDEF'));
+        $this->assertNull($setting->whatsappPhoneFromUrl(null));
+
+        // Tanpa nomor yang bisa dibaca, alamat milik admin tetap dipakai supaya
+        // obrolannya tidak berpindah ke nomor lain.
+        $this->assertSame(
+            'https://wa.me/message/ABCDEF?text=Halo',
+            $setting->whatsappUrlWithText('https://wa.me/message/ABCDEF', 'Halo'),
+        );
+
+        // Tautan yang bukan WhatsApp jatuh ke nomor pengaturan situs.
+        $this->assertSame(
+            'https://wa.me/6281200001111?text=Halo',
+            $setting->whatsappUrlWithText('https://example.test/kontak', 'Halo'),
+        );
     }
 
     public function test_the_whatsapp_number_is_tidied_up_into_the_wa_me_format(): void

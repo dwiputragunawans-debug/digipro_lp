@@ -71,16 +71,20 @@ class Service extends Model
      * Alamat tujuan tombol "Diskusikan Kebutuhan" di kartu ini.
      *
      * 1. Tautan yang diisi admin dipakai apa adanya kalau bukan tautan WhatsApp.
-     * 2. Tautan WhatsApp dari admin tetap dipakai, hanya pesannya yang diganti
-     *    dengan template paket, supaya nomor tujuannya tidak berubah.
+     * 2. Tautan WhatsApp dari admin tetap dipakai nomornya, pesannya diganti
+     *    dengan template paket supaya nomor tujuannya tidak berubah.
      * 3. Tanpa tautan dari admin, tombolnya menuju WhatsApp dengan pesan paket.
+     *
+     * Tanda "#" yang tertulis di kolom tautan dianggap belum diisi: itu tulisan
+     * contoh di panel admin, dan tombol yang menunjuk ke "#" hanya melompat ke
+     * atas halaman, bukan membuka WhatsApp.
      *
      * Dengan begitu setiap kartu membawa nama paketnya masing-masing tanpa
      * admin perlu menulis satu tautan untuk setiap kartu.
      */
     public function ctaUrlFor(SiteSetting $setting): string
     {
-        if (! filled($this->cta_url)) {
+        if (! filled($this->cta_url) || trim((string) $this->cta_url) === '#') {
             return $setting->whatsappUrlFor($this->whatsappMessage());
         }
 
