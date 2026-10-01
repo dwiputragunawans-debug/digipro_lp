@@ -23,7 +23,9 @@
     @if (filled($title))
         <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 to-transparent p-6 pt-12">
             @if (filled($link))
-                <a href="{{ $link }}" class="text-lg font-bold text-white hover:underline">{{ $title }}</a>
+                {{-- Tautan karya dibuka di tab baru supaya pengunjung tidak
+                     kehilangan halaman ini saat melihat contoh proyeknya. --}}
+                <a href="{{ $link }}" target="_blank" rel="noopener" class="text-lg font-bold text-white hover:underline">{{ $title }}</a>
             @else
                 <h3 class="text-lg font-bold text-white">{{ $title }}</h3>
             @endif

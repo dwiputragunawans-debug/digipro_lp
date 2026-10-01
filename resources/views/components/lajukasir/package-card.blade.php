@@ -58,7 +58,7 @@
 
     <a
         href="{{ filled($ctaUrl) ? $ctaUrl : '#' }}"
-        @if ($track) data-whatsapp-click @endif
+        @if ($track) data-whatsapp-click target="_blank" rel="noopener" @endif
         @class([
             'block w-full rounded-xl px-4 py-3 text-center font-semibold transition-all duration-300',
             'bg-brand-50 text-brand-800 hover:bg-brand-100' => ! $highlighted,

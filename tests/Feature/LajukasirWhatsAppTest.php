@@ -173,6 +173,35 @@ class LajukasirWhatsAppTest extends TestCase
         $this->assertSame(0, AnalyticsEvent::uniqueVisitors($from, null, AnalyticsEvent::SITE_LAJUKASIR));
     }
 
+    public function test_a_whatsapp_link_without_a_message_gets_the_default_message(): void
+    {
+        Setting::current()->update([
+            // Tautan dari tombol "bagikan ke WhatsApp": nomornya ada, pesannya
+            // belum diisi.
+            'hero_primary_url' => 'https://api.whatsapp.com/send/?phone=6281234567890&text&type=phone_number&app_absent=0',
+        ]);
+        Setting::forgetCurrent();
+
+        $html = $this->get($this->url())->assertOk()->getContent();
+
+        // Pesan bawaan situs yang dipakai, jadi pengunjung tidak mendarat di
+        // kolom chat yang kosong.
+        $this->assertStringContainsString('text='.rawurlencode(Setting::DEFAULT_WHATSAPP_MESSAGE), $html);
+        $this->assertStringContainsString('https://api.whatsapp.com/send/?phone=6281234567890', $html);
+    }
+
+    public function test_a_whatsapp_link_that_already_has_a_message_is_left_alone(): void
+    {
+        $url = 'https://wa.me/628111222333?text='.rawurlencode('Halo, saya mau tanya paket toko.');
+
+        Setting::current()->update(['hero_primary_url' => $url]);
+        Setting::forgetCurrent();
+
+        $html = $this->get($this->url())->assertOk()->getContent();
+
+        $this->assertStringContainsString($url, $html);
+    }
+
     public function test_the_visitor_cookie_is_the_same_one_the_digipro_page_uses(): void
     {
         $this->withHeaders(['User-Agent' => self::MOBILE_UA])

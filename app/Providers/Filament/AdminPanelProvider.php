@@ -41,7 +41,9 @@ class AdminPanelProvider extends PanelProvider
                 ])
                 : null)
             ->brandLogoHeight('2rem')
-            ->favicon(fn (): ?string => SiteSetting::current()->logoUrl())
+            // Ikon tab browser panel: favicon khusus kalau ada, kalau tidak
+            // logonya. Lihat App\Models\Concerns\HasSiteBranding.
+            ->favicon(fn (): ?string => SiteSetting::current()->faviconUrl())
             ->sidebarWidth('16rem')
             ->collapsedSidebarWidth('4rem')
             ->renderHook(

@@ -170,7 +170,9 @@ class Setting extends Model
      */
     public function heroPrimaryUrl(): string
     {
-        return $this->hero_primary_url ?: $this->whatsappUrl();
+        // Tautan WhatsApp dari admin dilengkapi pesannya lebih dahulu, supaya
+        // pengunjung tidak mendarat di kolom chat yang kosong.
+        return $this->whatsappUrlWithFilledText($this->hero_primary_url) ?: $this->whatsappUrl();
     }
 
     /**
@@ -179,7 +181,7 @@ class Setting extends Model
      */
     public function ctaButtonUrl(): string
     {
-        return $this->cta_button_url ?: $this->whatsappUrl();
+        return $this->whatsappUrlWithFilledText($this->cta_button_url) ?: $this->whatsappUrl();
     }
 
     protected function heroImageFileExists(?string $path): bool

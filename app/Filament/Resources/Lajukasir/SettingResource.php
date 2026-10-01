@@ -80,6 +80,13 @@ class SettingResource extends Resource
                                     ->label('Pratinjau logo')
                                     ->content(fn (Get $get): View => static::logoPreview($get))
                                     ->columnSpanFull(),
+                                Forms\Components\FileUpload::make('favicon')
+                                    ->label('Favicon (ikon di tab browser)')
+                                    ->image()
+                                    // Sama seperti logo: Setting menyajikan
+                                    // favicon dari disk publik.
+                                    ->disk('public')
+                                    ->helperText('Ikon kecil yang tampil di tab browser dan saat halamannya disimpan ke layar utama. Serahkan berkas persegi, misalnya 512 x 512 piksel dengan format PNG atau ICO. Kosong berarti logonya yang dipakai.'),
                             ])
                             ->columns(2),
                         Forms\Components\Tabs\Tab::make('Bagian Pembuka')

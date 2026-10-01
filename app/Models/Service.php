@@ -13,6 +13,14 @@ class Service extends Model
 {
     use HasIconName;
 
+    /**
+     * Template pesan WhatsApp tombol kartu ini sebelum admin menulis sendiri.
+     *
+     * Penanda {paket} diganti dengan judul paketnya, sehingga satu template
+     * yang sama tetap menyebut paket yang dipilih pengunjung.
+     */
+    public const DEFAULT_WHATSAPP_MESSAGE_TEMPLATE = 'Halo DigiPro Solution, saya ingin bertanya tentang paket "{paket}". Apakah bisa dijelaskan lebih lanjut?';
+
     protected $guarded = [];
 
     /**
@@ -44,5 +52,42 @@ class Service extends Model
                 ->values()
                 ->all();
         });
+    }
+
+    /**
+     * Pesan WhatsApp yang siap dipakai tombol kartu ini: template yang diisi
+     * admin, atau template bawaan, dengan {paket} sudah diganti judul paketnya.
+     */
+    public function whatsappMessage(): string
+    {
+        $template = filled($this->whatsapp_message)
+            ? (string) $this->whatsapp_message
+            : self::DEFAULT_WHATSAPP_MESSAGE_TEMPLATE;
+
+        return trim(str_replace('{paket}', (string) $this->title, $template));
+    }
+
+    /**
+     * Alamat tujuan tombol "Diskusikan Kebutuhan" di kartu ini.
+     *
+     * 1. Tautan yang diisi admin dipakai apa adanya kalau bukan tautan WhatsApp.
+     * 2. Tautan WhatsApp dari admin tetap dipakai, hanya pesannya yang diganti
+     *    dengan template paket, supaya nomor tujuannya tidak berubah.
+     * 3. Tanpa tautan dari admin, tombolnya menuju WhatsApp dengan pesan paket.
+     *
+     * Dengan begitu setiap kartu membawa nama paketnya masing-masing tanpa
+     * admin perlu menulis satu tautan untuk setiap kartu.
+     */
+    public function ctaUrlFor(SiteSetting $setting): string
+    {
+        if (! filled($this->cta_url)) {
+            return $setting->whatsappUrlFor($this->whatsappMessage());
+        }
+
+        if ($setting->isWhatsAppLink($this->cta_url)) {
+            return $setting->whatsappUrlWithText($this->cta_url, $this->whatsappMessage());
+        }
+
+        return (string) $this->cta_url;
     }
 }

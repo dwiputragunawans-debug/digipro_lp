@@ -47,6 +47,13 @@ class SiteSettingResource extends Resource
                     ->label('Pratinjau logo')
                     ->content(fn (Get $get): View => static::logoPreview($get))
                     ->columnSpanFull(),
+                Forms\Components\FileUpload::make('favicon')
+                    ->label('Favicon (ikon di tab browser)')
+                    ->image()
+                    // Sama seperti logo: SiteSetting menyajikan favicon dari
+                    // disk publik.
+                    ->disk('public')
+                    ->helperText('Ikon kecil yang tampil di tab browser dan saat halamannya disimpan ke layar utama. Serahkan berkas persegi, misalnya 512 x 512 piksel dengan format PNG atau ICO. Kosong berarti logonya yang dipakai.'),
                 Forms\Components\Section::make('Tombol WhatsApp')
                     ->description('Tombol mengambang di kanan bawah landing page supaya pengunjung bisa menghubungi admin hanya dengan sekali klik.')
                     ->schema([

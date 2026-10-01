@@ -62,6 +62,9 @@ class LandingPortfolioAndProcessTest extends TestCase
         $this->assertStringContainsString('Toko Kelontong', $section);
         $this->assertStringContainsString('https://example.test/kelontong', $section);
 
+        // Tautan karya dibuka di tab baru, jadi halaman ini tidak ikut tertinggal.
+        $this->assertStringContainsString('<a href="https://example.test/kelontong" target="_blank" rel="noopener"', $section);
+
         // Kotak contoh hanya dipakai kalau gambar atau datanya tidak ada.
         $this->assertStringNotContainsString('Project Mockup', $section);
     }

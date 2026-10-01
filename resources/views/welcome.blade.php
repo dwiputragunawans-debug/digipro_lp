@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {{-- Judul, deskripsi, kanonis, pratinjau tautan dan data terstruktur. --}}
     <x-seo-meta />
+    {{-- Ikon di tab browser dan bookmark, diatur di menu Pengaturan Situs. --}}
+    <x-favicon-links />
     {{-- Dipakai resources/js/app.js untuk melaporkan klik tombol WhatsApp. --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="whatsapp-click-endpoint" content="{{ route('analytics.whatsapp-click') }}">
@@ -15,8 +17,19 @@
     </style>
 </head>
 <body class="antialiased bg-slate-50 text-slate-800 selection:bg-blue-600 selection:text-white">
+    @php
+        // Menu header, dipakai dua kali: mendatar di layar lebar dan bertumpuk
+        // di dalam menu ponsel serta tablet.
+        $navLinks = [
+            ['href' => '#mengapa', 'label' => 'Mengapa Kami'],
+            ['href' => '#solusi', 'label' => 'Solusi'],
+            ['href' => '#karya', 'label' => 'Karya'],
+            ['href' => '#proses', 'label' => 'Proses'],
+        ];
+    @endphp
+
     <!-- Navbar -->
-    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+    <nav data-nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center">
@@ -28,12 +41,43 @@
                         @endif
                     </a>
                 </div>
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#mengapa" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Mengapa Kami</a>
-                    <a href="#solusi" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Solusi</a>
-                    <a href="#karya" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Karya</a>
-                    <a href="#proses" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Proses</a>
-                    <a href="{{ $siteSetting->whatsappUrl() }}" data-whatsapp-click class="inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-full text-white bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">Hubungi Kami</a>
+
+                <div class="flex items-center gap-3">
+                    {{-- Menu mendatar hanya di layar lebar; di ponsel dan tablet
+                         digantikan tombol menu di sebelahnya. --}}
+                    <div class="hidden lg:flex items-center space-x-8">
+                        @foreach ($navLinks as $link)
+                            <a href="{{ $link['href'] }}" class="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">{{ $link['label'] }}</a>
+                        @endforeach
+                        {{-- Tombol WhatsApp dibuka di tab baru supaya halaman ini
+                             tetap terbuka saat pengunjung mulai mengobrol. --}}
+                        <a href="{{ $siteSetting->whatsappUrl() }}" data-whatsapp-click target="_blank" rel="noopener" class="inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-sm font-semibold rounded-full text-white bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">Hubungi Kami</a>
+                    </div>
+
+                    <button
+                        type="button"
+                        data-nav-toggle
+                        aria-expanded="false"
+                        aria-controls="primary-navigation"
+                        aria-label="Buka menu navigasi"
+                        class="lg:hidden grid h-11 w-11 place-items-center rounded-xl border border-slate-200 text-slate-700 transition-colors hover:bg-slate-100"
+                    >
+                        {{-- Dua ikon sekaligus; JavaScript yang menggilirnya, jadi
+                             tidak ada permintaan tambahan ke server. --}}
+                        <svg data-nav-icon-open class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                        <svg data-nav-icon-close class="hidden h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Daftar menu yang dibuka tombol di atas. Sama isinya dengan menu
+                 mendatar, hanya disusun bertumpuk untuk jempol. --}}
+            <div id="primary-navigation" data-nav-panel class="hidden border-t border-slate-100 py-4 lg:hidden">
+                <div class="flex flex-col">
+                    @foreach ($navLinks as $link)
+                        <a href="{{ $link['href'] }}" class="rounded-xl px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-slate-100 hover:text-blue-600">{{ $link['label'] }}</a>
+                    @endforeach
+                    <a href="{{ $siteSetting->whatsappUrl() }}" data-whatsapp-click target="_blank" rel="noopener" class="mt-3 inline-flex items-center justify-center rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700">Hubungi Kami</a>
                 </div>
             </div>
         </div>
@@ -50,8 +94,13 @@
                 <p class="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl leading-relaxed">
                     {{ $hero->subtitle ?? 'Beralih ke digital dengan website yang profesional dan mudah dikelola, dirancang khusus untuk meningkatkan omzet dan memenangkan persaingan.' }}
                 </p>
+                @php
+                    // Tautan WhatsApp dari admin dipakai apa adanya; hanya kalau
+                    // kolom pesannya masih kosong, pesan bawaan situs yang diisi.
+                    $heroPrimaryUrl = $siteSetting->whatsappUrlWithFilledText($hero->cta_primary_url ?? null) ?? '#';
+                @endphp
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <a href="{{ $hero->cta_primary_url ?? '#' }}" @if ($siteSetting->isWhatsAppLink($hero->cta_primary_url ?? null)) data-whatsapp-click @endif class="inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-semibold rounded-full text-blue-700 bg-white hover:bg-slate-50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <a href="{{ $heroPrimaryUrl }}" @if ($siteSetting->isWhatsAppLink($heroPrimaryUrl)) data-whatsapp-click target="_blank" rel="noopener" @endif class="inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-semibold rounded-full text-blue-700 bg-white hover:bg-slate-50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                         <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.898-4.45 9.898-9.898 0-5.448-4.45-9.897-9.898-9.897-5.448 0-9.898 4.45-9.898 9.897 0 2.115.597 3.716 1.591 5.392l-1.121 4.1 4.236-1.186zm10.514-4.249c-.273-.139-1.613-.796-1.863-.888-.25-.093-.432-.139-.614.139-.182.278-.705.888-.864 1.073-.159.185-.318.209-.591.07-2.613-1.332-4.041-2.909-5.595-5.503-.159-.278.149-.247.669-.748.24-.24.364-.37.495-.61.131-.24.066-.453-.027-.638-.093-.185-.614-1.482-.841-2.029-.22-.533-.443-.46-.614-.467-.168-.007-.363-.009-.556-.009-.193 0-.505.071-.773.349-.268.278-1.023 1-1.023 2.436s1.045 2.825 1.19 3.01c.145.185 2.053 3.136 4.97 4.398 2.096.904 2.868 1.055 3.906.883.953-.158 2.836-1.157 3.238-2.276.402-1.119.402-2.078.282-2.276-.12-.198-.433-.306-.706-.445z"/></svg>
                         {{ $hero->cta_primary_text ?? 'WhatsApp' }}
                     </a>
@@ -107,6 +156,12 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 @forelse($services ?? [] as $service)
+                    @php
+                        // Tombol kartu menuju WhatsApp dengan pesan yang menyebut
+                        // paketnya, supaya admin tidak perlu menulis satu tautan
+                        // wa.me untuk setiap paket. Lihat Service::ctaUrlFor().
+                        $serviceUrl = $service->ctaUrlFor($siteSetting);
+                    @endphp
                     {{-- Isi kartu diambil dari menu Layanan di panel admin. --}}
                     <x-service-card
                         :icon="$service->icon_name"
@@ -116,7 +171,8 @@
                         :badge="$service->badge"
                         :highlighted="$service->is_highlighted"
                         :cta-text="$service->cta_text"
-                        :cta-url="$service->cta_url"
+                        :cta-url="$serviceUrl"
+                        :cta-whatsapp="$siteSetting->isWhatsAppLink($serviceUrl)"
                     />
                 @empty
                     {{-- Kartu contoh kalau menu Layanan masih kosong. --}}
@@ -248,7 +304,12 @@
             <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">{{ $cta->title ?? 'Siap Membawa Bisnis UMKM Anda ke Level Selanjutnya?' }}</h2>
             <p class="text-blue-100 mb-10 text-lg">{{ $cta->description ?? 'Konsultasikan kebutuhan website Anda secara GRATIS.' }}</p>
             <div class="flex flex-col items-center">
-                <a href="{{ $cta->button_url ?? '#' }}" @if ($siteSetting->isWhatsAppLink($cta->button_url ?? null)) data-whatsapp-click @endif class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-bold rounded-full text-blue-700 bg-white hover:bg-slate-50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                @php
+                    // Sama seperti tombol di bagian pembuka: tautan WhatsApp dari
+                    // admin dilengkapi pesannya kalau masih kosong.
+                    $ctaButtonUrl = $siteSetting->whatsappUrlWithFilledText($cta->button_url ?? null) ?? '#';
+                @endphp
+                <a href="{{ $ctaButtonUrl }}" @if ($siteSetting->isWhatsAppLink($ctaButtonUrl)) data-whatsapp-click target="_blank" rel="noopener" @endif class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-lg font-bold rounded-full text-blue-700 bg-white hover:bg-slate-50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                     <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"></path></svg>
                     {{ $cta->button_text ?? 'Konsultasi Gratis Sekarang' }}
                 </a>

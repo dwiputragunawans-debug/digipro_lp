@@ -73,6 +73,75 @@ trait HasWhatsApp
     }
 
     /**
+     * Tautan wa.me dengan pesan yang berbeda dari pesan bawaan situs.
+     *
+     * Dipakai tombol di kartu paket: pesan yang sudah terisi di kolom chat
+     * WhatsApp menyebut paket yang dipilih pengunjung, bukan pesan umum.
+     */
+    public function whatsappUrlFor(string $message): string
+    {
+        return 'https://wa.me/'.$this->whatsappNumber().'?text='.rawurlencode($message);
+    }
+
+    /**
+     * Tautan WhatsApp yang sudah dibuat admin, tetapi pesannya diganti dengan
+     * pesan yang dikirim pemanggil.
+     *
+     * Nomor tujuannya ikut tautan yang ada, jadi admin tetap yang menentukan
+     * mau dikirim ke nomor mana. Kalau tautannya ternyata bukan tautan
+     * WhatsApp, yang dipakai adalah nomor di pengaturan situs.
+     */
+    public function whatsappUrlWithText(?string $url, string $message): string
+    {
+        if (! $this->isWhatsAppLink($url)) {
+            return $this->whatsappUrlFor($message);
+        }
+
+        $parts = parse_url((string) $url);
+
+        if ($parts === false || ! filled($parts['host'] ?? null)) {
+            return $this->whatsappUrlFor($message);
+        }
+
+        // Hanya pesannya yang ditimpa; parameter lain dari tautan admin
+        // (nomor telepon, penanda aplikasi) dibiarkan apa adanya.
+        parse_str((string) ($parts['query'] ?? ''), $query);
+
+        $query['text'] = $message;
+
+        return ($parts['scheme'] ?? 'https').'://'.$parts['host'].($parts['path'] ?? '')
+            .'?'.http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+    }
+
+    /**
+     * Tautan WhatsApp yang pesannya sudah terisi.
+     *
+     * Tautan yang dibuat admin dipakai apa adanya selama pesannya sudah diisi.
+     * Kalau kolom pesannya kosong — seperti tautan yang disalin dari tombol
+     * "bagikan ke WhatsApp" — pesan bawaan situs yang dipakai, supaya
+     * pengunjung tidak mulai dari kolom chat yang kosong.
+     *
+     * Tautan yang bukan WhatsApp, dan tautan yang memang belum diisi,
+     * dikembalikan tanpa perubahan.
+     */
+    public function whatsappUrlWithFilledText(?string $url): ?string
+    {
+        if (! filled($url) || ! $this->isWhatsAppLink($url)) {
+            return $url;
+        }
+
+        $query = [];
+
+        parse_str((string) parse_url((string) $url, PHP_URL_QUERY), $query);
+
+        if (filled($query['text'] ?? null)) {
+            return (string) $url;
+        }
+
+        return $this->whatsappUrlWithText($url, $this->whatsappMessage());
+    }
+
+    /**
      * Apakah sebuah tautan menuju WhatsApp.
      *
      * Dipakai supaya tombol WhatsApp yang bukan buatan situs ini, misalnya

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     {{-- Judul, deskripsi, kanonis, pratinjau tautan dan data terstruktur halaman LajuKasir. --}}
     <x-seo-meta :setting="$setting" :noindex="$noindex" />
+    {{-- Ikon di tab browser dan bookmark, diatur di menu Pengaturan LajuKasir. --}}
+    <x-favicon-links :setting="$setting" />
     {{-- Dipakai resources/js/app.js untuk melaporkan klik tombol WhatsApp. --}}
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="whatsapp-click-endpoint" content="{{ route('analytics.whatsapp-click') }}">
@@ -35,10 +37,21 @@
 
     $heroPrimaryUrl = $setting->heroPrimaryUrl();
     $ctaUrl = $setting->ctaButtonUrl();
+
+    // Menu header, dipakai dua kali: mendatar di layar lebar dan bertumpuk di
+    // dalam menu ponsel serta tablet. Bagian yang isinya masih kosong tidak
+    // ikut masuk daftar, sama seperti menunya selama ini.
+    $navLinks = array_values(array_filter([
+        $showFeatures ? ['href' => '#fitur', 'label' => 'Fitur'] : null,
+        $showPackages ? ['href' => '#paket', 'label' => 'Paket Harga'] : null,
+        $showGallery ? ['href' => '#tampilan', 'label' => 'Tampilan'] : null,
+        $showSteps ? ['href' => '#cara', 'label' => 'Cara Mulai'] : null,
+        $showFaq ? ['href' => '#faq', 'label' => 'Tanya Jawab'] : null,
+    ]));
 @endphp
 
 {{-- Navbar --}}
-<nav class="sticky top-0 z-50 border-b border-brand-100 bg-white/85 backdrop-blur-md">
+<nav data-nav class="sticky top-0 z-50 border-b border-brand-100 bg-white/85 backdrop-blur-md">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-20 items-center justify-between gap-6">
             <a href="#" class="flex min-w-0 items-center gap-3">
@@ -62,25 +75,45 @@
                 @endif
             </a>
 
-            <div class="hidden items-center gap-7 lg:flex">
-                @if ($showFeatures)
-                    <a href="#fitur" class="text-sm font-medium text-slate-600 transition-colors hover:text-brand-700">Fitur</a>
-                @endif
-                @if ($showPackages)
-                    <a href="#paket" class="text-sm font-medium text-slate-600 transition-colors hover:text-brand-700">Paket Harga</a>
-                @endif
-                @if ($showGallery)
-                    <a href="#tampilan" class="text-sm font-medium text-slate-600 transition-colors hover:text-brand-700">Tampilan</a>
-                @endif
-                @if ($showSteps)
-                    <a href="#cara" class="text-sm font-medium text-slate-600 transition-colors hover:text-brand-700">Cara Mulai</a>
-                @endif
-                @if ($showFaq)
-                    <a href="#faq" class="text-sm font-medium text-slate-600 transition-colors hover:text-brand-700">Tanya Jawab</a>
-                @endif
-                <a href="{{ $setting->whatsappUrl() }}" data-whatsapp-click class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:from-brand-700 hover:to-brand-600 hover:shadow-lg">
-                    Hubungi Kami
-                </a>
+            <div class="flex items-center gap-3">
+                {{-- Menu mendatar hanya di layar lebar; di ponsel dan tablet
+                     digantikan tombol menu di sebelahnya. Bagian yang isinya
+                     masih kosong tidak ikut masuk daftar menu. --}}
+                <div class="hidden items-center gap-7 lg:flex">
+                    @foreach ($navLinks as $link)
+                        <a href="{{ $link['href'] }}" class="text-sm font-medium text-slate-600 transition-colors hover:text-brand-700">{{ $link['label'] }}</a>
+                    @endforeach
+                    {{-- Tombol WhatsApp dibuka di tab baru supaya halaman ini
+                         tetap terbuka saat pengunjung mulai mengobrol. --}}
+                    <a href="{{ $setting->whatsappUrl() }}" data-whatsapp-click target="_blank" rel="noopener" class="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-brand-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:from-brand-700 hover:to-brand-600 hover:shadow-lg">
+                        Hubungi Kami
+                    </a>
+                </div>
+
+                <button
+                    type="button"
+                    data-nav-toggle
+                    aria-expanded="false"
+                    aria-controls="primary-navigation"
+                    aria-label="Buka menu navigasi"
+                    class="grid h-11 w-11 place-items-center rounded-xl border border-brand-200 text-ink-800 transition-colors hover:bg-brand-50 lg:hidden"
+                >
+                    {{-- Dua ikon sekaligus; JavaScript yang menggilirnya, jadi
+                         tidak ada permintaan tambahan ke server. --}}
+                    <svg data-nav-icon-open class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    <svg data-nav-icon-close class="hidden h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Daftar menu yang dibuka tombol di atas. Sama isinya dengan menu
+             mendatar, hanya disusun bertumpuk untuk jempol. --}}
+        <div id="primary-navigation" data-nav-panel class="hidden border-t border-brand-100 py-4 lg:hidden">
+            <div class="flex flex-col">
+                @foreach ($navLinks as $link)
+                    <a href="{{ $link['href'] }}" class="rounded-xl px-4 py-3 text-base font-medium text-slate-700 transition-colors hover:bg-brand-50 hover:text-brand-700">{{ $link['label'] }}</a>
+                @endforeach
+                <a href="{{ $setting->whatsappUrl() }}" data-whatsapp-click target="_blank" rel="noopener" class="mt-3 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-md shadow-brand-600/20 transition-colors hover:from-brand-700 hover:to-brand-600">Hubungi Kami</a>
             </div>
         </div>
     </div>
@@ -108,7 +141,7 @@
             <div class="mt-10 flex flex-col gap-4 sm:flex-row">
                 <a
                     href="{{ $heroPrimaryUrl }}"
-                    @if ($setting->isWhatsAppLink($heroPrimaryUrl)) data-whatsapp-click @endif
+                    @if ($setting->isWhatsAppLink($heroPrimaryUrl)) data-whatsapp-click target="_blank" rel="noopener" @endif
                     class="inline-flex items-center justify-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-brand-800 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-brand-50 hover:shadow-xl"
                 >
                     <x-lajukasir.whatsapp-icon class="h-5 w-5" />
@@ -192,7 +225,7 @@
                     @php
                         // Tautan tombol paket memakai WhatsApp kalau admin belum
                         // mengisi tautannya sendiri.
-                        $packageUrl = $package->cta_url ?: $setting->whatsappUrl();
+                        $packageUrl = $setting->whatsappUrlWithFilledText($package->cta_url) ?: $setting->whatsappUrl();
                     @endphp
 
                     {{-- Isi kartu diambil dari menu Paket Harga di panel admin. --}}
@@ -379,7 +412,7 @@
                 <div class="mt-10 flex flex-col items-center">
                     <a
                         href="{{ $ctaUrl }}"
-                        @if ($setting->isWhatsAppLink($ctaUrl)) data-whatsapp-click @endif
+                        @if ($setting->isWhatsAppLink($ctaUrl)) data-whatsapp-click target="_blank" rel="noopener" @endif
                         class="inline-flex items-center justify-center gap-2 rounded-full bg-white px-10 py-4 text-lg font-bold text-brand-800 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-brand-50"
                     >
                         <x-lajukasir.whatsapp-icon class="h-5 w-5" />
@@ -457,7 +490,7 @@
                     @endif
 
                     <li>
-                        <a href="{{ $setting->whatsappUrl() }}" data-whatsapp-click class="font-semibold text-brand-300 transition-colors hover:text-white">WhatsApp: +{{ $setting->whatsappNumber() }}</a>
+                        <a href="{{ $setting->whatsappUrl() }}" data-whatsapp-click target="_blank" rel="noopener" class="font-semibold text-brand-300 transition-colors hover:text-white">WhatsApp: +{{ $setting->whatsappNumber() }}</a>
                     </li>
                 </ul>
             </div>

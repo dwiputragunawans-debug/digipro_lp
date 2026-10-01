@@ -21,6 +21,32 @@ use Throwable;
 trait HasSiteBranding
 {
     /**
+     * Jenis gambar favicon, dikenali dari akhiran berkasnya supaya tag <link>
+     * bisa menyebut MIME type-nya dengan benar.
+     *
+     * @var array<string, string>
+     */
+    private const FAVICON_TYPE_BY_EXTENSION = [
+        'ico' => 'image/x-icon',
+        'png' => 'image/png',
+        'svg' => 'image/svg+xml',
+        'webp' => 'image/webp',
+        'jpg' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'avif' => 'image/avif',
+    ];
+
+    /**
+     * Jenis gambar yang dipakai sebagai apple-touch-icon. Apple belum
+     * menerima SVG di sana, dan ICO bukan format yang diharapkannya, jadi
+     * keduanya dilewati dan tag-nya tidak perlu dirender.
+     *
+     * @var list<string>
+     */
+    private const APPLE_TOUCH_ICON_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+
+    /**
      * Nama situs yang tampil di panel admin, judul halaman dan alt logo.
      */
     public function siteName(): string
@@ -116,6 +142,72 @@ trait HasSiteBranding
         }
 
         return null;
+    }
+
+    /**
+     * Berkas favicon yang dipakai situs ini.
+     *
+     * Favicon yang diunggah khusus menang. Selama belum ada, logonya yang
+     * dipakai, sehingga ikon di tab browser sudah terisi begitu admin
+     * mengunggah logo. Favicon tersendiri tetap berguna karena logo biasanya
+     * terlalu detail untuk dibaca sekecil ikon tab.
+     */
+    public function faviconPath(): ?string
+    {
+        $favicon = $this->favicon ?? null;
+
+        if (filled($favicon) && static::publicFileExists($favicon)) {
+            return (string) $favicon;
+        }
+
+        return $this->hasLogo() ? (string) $this->logo : null;
+    }
+
+    /**
+     * Whether there is an icon to render, either its own or the logo it falls
+     * back to.
+     */
+    public function hasFavicon(): bool
+    {
+        return filled($this->faviconPath());
+    }
+
+    /**
+     * Root relative URL of the favicon, so that it is always loaded from the
+     * same origin as the page that renders it.
+     */
+    public function faviconUrl(): ?string
+    {
+        $path = $this->faviconPath();
+
+        return filled($path) ? Storage::disk('public')->url($path) : null;
+    }
+
+    /**
+     * MIME type favicon. Berkas dengan akhiran yang tidak dikenal dikembalikan
+     * sebagai null, jadi tag <link>-nya dibiarkan tanpa type dan browser yang
+     * menebak sendiri.
+     */
+    public function faviconType(): ?string
+    {
+        $extension = strtolower(pathinfo((string) $this->faviconPath(), PATHINFO_EXTENSION));
+
+        return self::FAVICON_TYPE_BY_EXTENSION[$extension] ?? null;
+    }
+
+    /**
+     * Alamat ikon untuk perangkat Apple, atau null kalau berkasnya bukan jenis
+     * gambar yang diterima di sana.
+     */
+    public function appleTouchIconUrl(): ?string
+    {
+        $path = $this->faviconPath();
+
+        if (! filled($path) || ! in_array($this->faviconType(), self::APPLE_TOUCH_ICON_TYPES, true)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($path);
     }
 
     /**

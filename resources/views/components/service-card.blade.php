@@ -7,10 +7,14 @@
     'highlighted' => false,
     'ctaText' => null,
     'ctaUrl' => null,
+    // Diisi true kalau tautannya menuju WhatsApp: tombolnya lalu dibuka di tab
+    // baru dan kliknya ikut dihitung di dasbor analitik.
+    'ctaWhatsapp' => false,
 ])
 
 @php
     $highlighted = (bool) $highlighted;
+    $ctaWhatsapp = (bool) $ctaWhatsapp;
     $benefits = collect($benefits)->filter(fn ($benefit): bool => filled($benefit))->values();
     $button = filled($ctaText) ? $ctaText : ($highlighted ? 'Hubungi Kami' : 'Selengkapnya');
 @endphp
@@ -53,9 +57,13 @@
         @endforeach
     </ul>
 
-    <a href="{{ filled($ctaUrl) ? $ctaUrl : '#' }}" @class([
-        'block w-full py-3 px-4 font-semibold rounded-xl transition-colors text-center',
-        'bg-slate-100 text-slate-800 hover:bg-slate-200' => ! $highlighted,
-        'bg-blue-600 text-white hover:bg-blue-500' => $highlighted,
-    ])>{{ $button }}</a>
+    <a
+        href="{{ filled($ctaUrl) ? $ctaUrl : '#' }}"
+        @if ($ctaWhatsapp) data-whatsapp-click target="_blank" rel="noopener" @endif
+        @class([
+            'block w-full py-3 px-4 font-semibold rounded-xl transition-colors text-center',
+            'bg-slate-100 text-slate-800 hover:bg-slate-200' => ! $highlighted,
+            'bg-blue-600 text-white hover:bg-blue-500' => $highlighted,
+        ])
+    >{{ $button }}</a>
 </div>

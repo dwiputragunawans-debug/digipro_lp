@@ -128,6 +128,7 @@ class LandingServiceSectionTest extends TestCase
                 'benefits' => "Satu\nDua",
                 'cta_text' => 'Pesan Sekarang',
                 'cta_url' => 'https://example.test/pesan',
+                'whatsapp_message' => 'Halo, saya mau tanya paket {paket}.',
             ])
             ->call('save')
             ->assertHasNoFormErrors()
@@ -142,6 +143,9 @@ class LandingServiceSectionTest extends TestCase
         $this->assertSame("Satu\nDua", $service->benefits);
         $this->assertSame('Pesan Sekarang', $service->cta_text);
         $this->assertSame('https://example.test/pesan', $service->cta_url);
+        // Template pesan WhatsApp disimpan apa adanya; penanda {paket} baru
+        // diganti saat halamannya dibuka.
+        $this->assertSame('Halo, saya mau tanya paket {paket}.', $service->whatsapp_message);
     }
 
     public function test_the_service_model_normalizes_the_icon_and_splits_the_benefits(): void
