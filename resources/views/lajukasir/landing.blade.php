@@ -453,6 +453,10 @@
                 <p class="max-w-sm text-sm leading-relaxed text-ink-300">
                     {{ $setting->footer_description ?: 'LajuKasir membantu toko, kios dan warung mencatat penjualan dengan rapi tanpa harus bergantung pada koneksi internet.' }}
                 </p>
+
+                {{-- Ikon media sosial yang alamatnya diisi di menu Pengaturan
+                     LajuKasir; yang dikosongkan tidak ditampilkan. --}}
+                <x-social-links :links="$setting->socialLinks()" heading="Media sosial" class="mt-8" />
             </div>
 
             @if ($showFeatures || $showPackages || $showGallery || $showSteps || $showFaq)

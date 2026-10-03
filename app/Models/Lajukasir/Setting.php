@@ -4,6 +4,7 @@ namespace App\Models\Lajukasir;
 
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasSiteBranding;
+use App\Models\Concerns\HasSocialLinks;
 use App\Models\Concerns\HasWhatsApp;
 use App\Support\TextLines;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -25,6 +26,7 @@ class Setting extends Model
 {
     use HasSeoMeta;
     use HasSiteBranding;
+    use HasSocialLinks;
     use HasWhatsApp;
 
     protected $table = 'lajukasir_settings';

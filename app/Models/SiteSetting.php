@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasSeoMeta;
 use App\Models\Concerns\HasSiteBranding;
+use App\Models\Concerns\HasSocialLinks;
 use App\Models\Concerns\HasWhatsApp;
 use Illuminate\Database\Eloquent\Model;
 use Throwable;
@@ -11,15 +12,16 @@ use Throwable;
 /**
  * Pengaturan landing page DigiPro Solution.
  *
- * Logika merek, tombol WhatsApp dan tag SEO-nya dipakai bersama dengan
- * pengaturan halaman LajuKasir (App\Models\Lajukasir\Setting) lewat trait di
- * App\Models\Concerns, supaya kedua situs berperilaku sama persis dan hanya
- * nilai bawaannya yang berbeda.
+ * Logika merek, tombol WhatsApp, ikon media sosial dan tag SEO-nya dipakai
+ * bersama dengan pengaturan halaman LajuKasir (App\Models\Lajukasir\Setting)
+ * lewat trait di App\Models\Concerns, supaya kedua situs berperilaku sama
+ * persis dan hanya nilai bawaannya yang berbeda.
  */
 class SiteSetting extends Model
 {
     use HasSeoMeta;
     use HasSiteBranding;
+    use HasSocialLinks;
     use HasWhatsApp;
 
     /**

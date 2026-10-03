@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SiteSettingResource\Pages;
+use App\Filament\Support\SocialLinkFields;
 use App\Models\SiteSetting;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -118,6 +119,10 @@ class SiteSettingResource extends Resource
                             ->helperText('Matikan selama situsnya masih disiapkan: robots.txt akan menutup seluruh situs dan halamannya diberi penanda noindex.')
                             ->default(true),
                     ]),
+                Forms\Components\Section::make('Media Sosial')
+                    ->description('Ikon media sosial di kaki halaman. Hanya ikon yang alamatnya diisi yang tampil, jadi kolom yang dikosongkan tidak ikut dirender.')
+                    ->schema(SocialLinkFields::make())
+                    ->columns(2),
             ]);
     }
 

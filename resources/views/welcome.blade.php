@@ -329,6 +329,10 @@
                         <div class="text-3xl font-black text-white tracking-tighter mb-6">digi<span class="text-blue-500">pro</span></div>
                     @endif
                     <p class="text-slate-400 max-w-sm mb-6">Mitra terpercaya UMKM dalam melakukan transformasi digital dengan website profesional.</p>
+
+                    {{-- Ikon media sosial yang alamatnya diisi di menu Pengaturan
+                         Situs; yang dikosongkan tidak ditampilkan. --}}
+                    <x-social-links :links="$siteSetting->socialLinks()" heading="Media Sosial" />
                 </div>
                 <div>
                     <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Layanan</h4>

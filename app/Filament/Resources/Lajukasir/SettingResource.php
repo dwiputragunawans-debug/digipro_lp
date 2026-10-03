@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Lajukasir;
 
 use App\Filament\Resources\Lajukasir\SettingResource\Pages;
+use App\Filament\Support\SocialLinkFields;
 use App\Models\Lajukasir\Setting;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -237,6 +238,10 @@ class SettingResource extends Resource
                                             ->placeholder('© 2026 LajuKasir. Hak Cipta Dilindungi.')
                                             ->columnSpanFull(),
                                     ])
+                                    ->columns(2),
+                                Forms\Components\Section::make('Media sosial')
+                                    ->description('Ikon media sosial di kaki halaman. Hanya ikon yang alamatnya diisi yang tampil, jadi kolom yang dikosongkan tidak ikut dirender.')
+                                    ->schema(SocialLinkFields::make())
                                     ->columns(2),
                             ]),
                         Forms\Components\Tabs\Tab::make('WhatsApp')
