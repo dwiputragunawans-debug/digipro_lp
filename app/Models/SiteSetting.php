@@ -47,7 +47,7 @@ class SiteSetting extends Model
      * Nomor WhatsApp yang sudah dipakai situs ini, sehingga tombolnya tetap
      * berfungsi sebelum admin mengisi nomornya di menu Pengaturan Situs.
      */
-    public const DEFAULT_WHATSAPP_NUMBER = '6289662135974';
+    public const DEFAULT_WHATSAPP_NUMBER = '6289662133959';
 
     /**
      * Sapaan di balon obrolan kartu WhatsApp.

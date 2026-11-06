@@ -22,7 +22,7 @@ class LandingServiceWhatsappTest extends TestCase
      * Tautan WhatsApp yang tersimpan di panel admin: nomor sudah ada, tapi
      * kolom pesannya masih kosong.
      */
-    private const ADMIN_URL = 'https://api.whatsapp.com/send/?phone=6289662135974&text&type=phone_number&app_absent=0';
+    private const ADMIN_URL = 'https://api.whatsapp.com/send/?phone=6289662133959&text&type=phone_number&app_absent=0';
 
     protected function setUp(): void
     {
@@ -90,7 +90,7 @@ class LandingServiceWhatsappTest extends TestCase
         // menyuruh WhatsApp menyerahkan obrolannya ke aplikasi, dan di aplikasi
         // pesan yang sudah terisi sering ikut hilang.
         $this->assertStringContainsString(
-            'https://wa.me/6289662135974?text='.rawurlencode('Halo DigiPro Solution, saya ingin bertanya tentang paket "Katalog & Toko Online". Apakah bisa dijelaskan lebih lanjut?'),
+            'https://wa.me/6289662133959?text='.rawurlencode('Halo DigiPro Solution, saya ingin bertanya tentang paket "Katalog & Toko Online". Apakah bisa dijelaskan lebih lanjut?'),
             $section,
         );
         $this->assertStringNotContainsString('api.whatsapp.com', $section);

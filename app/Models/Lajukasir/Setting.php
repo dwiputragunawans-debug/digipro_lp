@@ -64,7 +64,7 @@ class Setting extends Model
      * Tombol WhatsApp LajuKasir memakai nomor yang sama dengan DigiPro
      * Solution, supaya calon pembeli tetap terhubung ke satu admin yang sama.
      */
-    public const DEFAULT_WHATSAPP_NUMBER = '6289662135974';
+    public const DEFAULT_WHATSAPP_NUMBER = '6289662133959';
 
     public const DEFAULT_WHATSAPP_GREETING = 'Halo 👋 Mau tanya soal aplikasi kasir LajuKasir?';
 

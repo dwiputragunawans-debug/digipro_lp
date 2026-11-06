@@ -107,7 +107,7 @@ class LandingWhatsAppWidgetTest extends TestCase
             'title' => 'Judul banner',
             // Tautan ini disalin dari tombol "bagikan ke WhatsApp", jadi kolom
             // pesannya masih kosong.
-            'cta_primary_url' => 'https://api.whatsapp.com/send/?phone=6289662135974&text&type=phone_number&app_absent=0',
+            'cta_primary_url' => 'https://api.whatsapp.com/send/?phone=6289662133959&text&type=phone_number&app_absent=0',
             'cta_primary_text' => 'Konsultasi Gratis',
         ]);
 
@@ -117,7 +117,7 @@ class LandingWhatsAppWidgetTest extends TestCase
         // menjadi bentuk wa.me supaya pesannya ikut terisi, juga saat WhatsApp
         // membuka aplikasinya.
         $this->assertStringContainsString(
-            'https://wa.me/6289662135974?text='.rawurlencode(SiteSetting::DEFAULT_WHATSAPP_MESSAGE),
+            'https://wa.me/6289662133959?text='.rawurlencode(SiteSetting::DEFAULT_WHATSAPP_MESSAGE),
             $html,
         );
         $this->assertStringNotContainsString('app_absent', $html);

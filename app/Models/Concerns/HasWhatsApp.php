@@ -29,7 +29,7 @@ trait HasWhatsApp
 
     /**
      * Nomor WhatsApp in the international format wa.me expects, without the
-     * plus sign: 6289662135974. Numbers written as 0896..., +62 896... or
+     * plus sign: 6289662133959. Numbers written as 0896..., +62 896... or
      * 896... are tidied up so the link always opens the right chat.
      */
     public function whatsappNumber(): string
